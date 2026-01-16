@@ -2,16 +2,17 @@ use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use crate::{
-    adapters::db::product::record::ProductRecord, logic::product_logic::CreateProductCommand,
+    adapters::db::product::record::ProductRecord, error::DomainError,
+    logic::product_logic::CreateProductCommand,
 };
 
 #[derive(Debug, Clone)]
 pub struct ProductName(String);
 
 impl ProductName {
-    pub fn new(value: String) -> Result<Self, anyhow::Error> {
+    pub fn new(value: String) -> Result<Self, DomainError> {
         if value.trim().is_empty() {
-            return Err(anyhow::anyhow!("Product name cannot be empty or only contain white spaces."));
+            return Err(DomainError::ProductNameEmpty);
         }
 
         Ok(Self(value))
@@ -30,7 +31,7 @@ pub struct Product {
 }
 
 impl TryFrom<CreateProductCommand> for Product {
-    type Error = anyhow::Error;
+    type Error = DomainError;
 
     fn try_from(value: CreateProductCommand) -> Result<Self, Self::Error> {
         Ok(Self {
@@ -42,7 +43,7 @@ impl TryFrom<CreateProductCommand> for Product {
 }
 
 impl TryFrom<ProductRecord> for Product {
-    type Error = anyhow::Error;
+    type Error = DomainError;
 
     fn try_from(value: ProductRecord) -> Result<Self, Self::Error> {
         Ok(Self {

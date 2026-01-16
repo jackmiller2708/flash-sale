@@ -5,6 +5,7 @@
     "dotenvy",
     "dtos",
     "serde",
-    "sqlx"
+    "sqlx",
+    "thiserror"
   ]
 }
