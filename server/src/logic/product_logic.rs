@@ -26,7 +26,9 @@ pub async fn save_product<R: ProductRepo + ?Sized>(
     repo: &R,
     command: CreateProductCommand,
 ) -> anyhow::Result<Product> {
-    repo.save(Product::from(command)).await
+    let product = Product::try_from(command)?;
+
+    repo.save(product).await
 }
 
 pub async fn get_products<R: ProductRepo + ?Sized>(repo: &R) -> anyhow::Result<Vec<Product>> {

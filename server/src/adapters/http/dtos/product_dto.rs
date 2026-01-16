@@ -18,7 +18,7 @@ impl From<Product> for ProductResponse {
     fn from(product: Product) -> Self {
         Self {
             id: product.id.to_string(),
-            name: product.name,
+            name: product.name.as_str().to_owned(),
             created_at: product.created_at,
         }
     }

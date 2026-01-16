@@ -15,7 +15,7 @@ impl From<Product> for ProductRecord {
     fn from(value: Product) -> Self {
         Self {
             id: value.id,
-            name: value.name,
+            name: value.name.as_str().to_owned(),
             created_at: value.created_at,
         }
     }

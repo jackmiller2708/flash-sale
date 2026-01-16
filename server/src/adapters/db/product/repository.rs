@@ -20,7 +20,7 @@ impl PostgresProductRepo {
 impl ProductRepo for PostgresProductRepo {
     async fn save(&self, product: Product) -> anyhow::Result<Product> {
         let record = ProductRecord::from(product);
-        let saved = sqlx::query_as!(
+        let saved_record = sqlx::query_as!(
             ProductRecord,
             r#"
             INSERT INTO products (name)
@@ -32,7 +32,9 @@ impl ProductRepo for PostgresProductRepo {
         .fetch_one(&self.pool)
         .await?;
 
-        Ok(Product::from(saved))
+        let saved_product = Product::try_from(saved_record)?;
+
+        Ok(saved_product)
     }
 
     async fn get_all(&self) -> anyhow::Result<Vec<Product>> {
@@ -46,6 +48,9 @@ impl ProductRepo for PostgresProductRepo {
         .fetch_all(&self.pool)
         .await?;
 
-        Ok(records.into_iter().map(|r| Product::from(r)).collect())
+        let products: Result<Vec<Product>, _> =
+            records.into_iter().map(Product::try_from).collect();
+
+        Ok(products?)
     }
 }

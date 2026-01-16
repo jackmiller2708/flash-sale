@@ -6,28 +6,49 @@ use crate::{
 };
 
 #[derive(Debug, Clone)]
-pub struct Product {
-    pub id: Uuid,
-    pub name: String,
-    pub created_at: DateTime<Utc>,
-}
+pub struct ProductName(String);
 
-impl From<CreateProductCommand> for Product {
-    fn from(value: CreateProductCommand) -> Self {
-        Self {
-            id: Uuid::new_v4(),
-            name: value.name,
-            created_at: DateTime::default(),
+impl ProductName {
+    pub fn new(value: String) -> Result<Self, anyhow::Error> {
+        if value.trim().is_empty() {
+            return Err(anyhow::anyhow!("Product name cannot be empty or only contain white spaces."));
         }
+
+        Ok(Self(value))
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
     }
 }
 
-impl From<ProductRecord> for Product {
-    fn from(value: ProductRecord) -> Self {
-        Self {
+#[derive(Debug, Clone)]
+pub struct Product {
+    pub id: Uuid,
+    pub name: ProductName,
+    pub created_at: DateTime<Utc>,
+}
+
+impl TryFrom<CreateProductCommand> for Product {
+    type Error = anyhow::Error;
+
+    fn try_from(value: CreateProductCommand) -> Result<Self, Self::Error> {
+        Ok(Self {
+            id: Uuid::new_v4(),
+            name: ProductName::new(value.name)?,
+            created_at: DateTime::default(),
+        })
+    }
+}
+
+impl TryFrom<ProductRecord> for Product {
+    type Error = anyhow::Error;
+
+    fn try_from(value: ProductRecord) -> Result<Self, Self::Error> {
+        Ok(Self {
             id: value.id,
-            name: value.name,
+            name: ProductName::new(value.name)?,
             created_at: value.created_at,
-        }
+        })
     }
 }
