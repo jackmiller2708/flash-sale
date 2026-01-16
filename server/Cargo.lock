@@ -358,6 +358,7 @@ dependencies = [
  "dotenvy",
  "serde",
  "sqlx",
+ "thiserror",
  "tokio",
  "tower",
  "tower-http",
