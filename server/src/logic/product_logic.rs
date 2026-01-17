@@ -2,7 +2,7 @@ use uuid::Uuid;
 
 use crate::{
     adapters::http::dtos::product_dto::CreateProductRequest, domain::product::Product,
-    ports::product_repo::ProductRepo,
+    ports::ProductRepo,
 };
 
 #[derive(Debug, Clone)]

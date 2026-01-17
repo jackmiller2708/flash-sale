@@ -2,17 +2,18 @@ use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use crate::{
-    adapters::db::product::record::ProductRecord, error::DomainError,
-    logic::product_logic::CreateProductCommand,
+    adapters::db::product::ProductRecord,
+    errors::{AppError, DomainError},
+    logic::CreateProductCommand,
 };
 
 #[derive(Debug, Clone)]
 pub struct ProductName(String);
 
 impl ProductName {
-    pub fn new(value: String) -> Result<Self, DomainError> {
+    pub fn new(value: String) -> Result<Self, AppError> {
         if value.trim().is_empty() {
-            return Err(DomainError::ProductNameEmpty);
+            return Err(AppError::Domain(DomainError::ProductNameEmpty));
         }
 
         Ok(Self(value))
@@ -31,7 +32,7 @@ pub struct Product {
 }
 
 impl TryFrom<CreateProductCommand> for Product {
-    type Error = DomainError;
+    type Error = AppError;
 
     fn try_from(value: CreateProductCommand) -> Result<Self, Self::Error> {
         Ok(Self {
@@ -43,7 +44,7 @@ impl TryFrom<CreateProductCommand> for Product {
 }
 
 impl TryFrom<ProductRecord> for Product {
-    type Error = DomainError;
+    type Error = AppError;
 
     fn try_from(value: ProductRecord) -> Result<Self, Self::Error> {
         Ok(Self {

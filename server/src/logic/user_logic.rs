@@ -1,7 +1,7 @@
 use chrono::DateTime;
 use uuid::Uuid;
 
-use crate::{domain::user::User, ports::user_repo::UserRepo};
+use crate::{domain::user::User, ports::UserRepo};
 
 pub async fn create_user<R: UserRepo + ?Sized>(repo: &R) -> anyhow::Result<User> {
     repo.save(User {

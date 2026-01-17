@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 
-use crate::domain::product::Product;
+use crate::domain::Product;
 
 #[derive(Debug, serde::Deserialize)]
 pub struct CreateProductRequest {

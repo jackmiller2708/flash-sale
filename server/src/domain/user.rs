@@ -1,7 +1,7 @@
 use sqlx::types::chrono::{DateTime, Utc};
 use uuid::Uuid;
 
-use crate::adapters::db::user::record::UserRecord;
+use crate::adapters::db::user::UserRecord;
 
 #[derive(Debug, Clone)]
 pub struct User {

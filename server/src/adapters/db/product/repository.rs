@@ -2,8 +2,8 @@ use async_trait::async_trait;
 use sqlx::PgPool;
 
 use crate::{
-    adapters::db::product::record::ProductRecord, domain::product::Product,
-    ports::product_repo::ProductRepo,
+    adapters::db::product::ProductRecord, domain::product::Product,
+    ports::ProductRepo,
 };
 
 pub struct PostgresProductRepo {

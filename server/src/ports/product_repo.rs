@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use crate::domain::product::Product;
+use crate::domain::Product;
 
 #[async_trait]
 pub trait ProductRepo: Send + Sync {

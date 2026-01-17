@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use sqlx::prelude::FromRow;
 use uuid::Uuid;
 
-use crate::domain::product::Product;
+use crate::domain::Product;
 
 #[derive(Debug, FromRow)]
 pub struct ProductRecord {

@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
-use crate::domain::user::User;
+use crate::domain::User;
 
 #[derive(serde::Serialize)]
 pub struct UserResponse {

@@ -2,7 +2,7 @@ use anyhow::Context;
 use axum::{Json, extract::State};
 use uuid::Uuid;
 
-use crate::{adapters::http::dtos::user_dto::UserResponse, app::state::AppState, logic::user_logic};
+use crate::{adapters::http::dtos::UserResponse, app::state::AppState, logic::user_logic};
 
 pub async fn create_user(
     State(state): State<AppState>,

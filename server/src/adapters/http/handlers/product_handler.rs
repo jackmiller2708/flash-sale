@@ -1,21 +1,22 @@
 use axum::{Json, extract::State};
 
 use crate::{
-    adapters::http::dtos::product_dto::{CreateProductRequest, ProductResponse},
+    adapters::http::dtos::{CreateProductRequest, ProductResponse},
     app::state::AppState,
+    errors::ApiError,
     logic::product_logic,
 };
 
 pub async fn create_product(
     State(state): State<AppState>,
     Json(req): Json<CreateProductRequest>,
-) -> Result<Json<ProductResponse>, (axum::http::StatusCode, String)> {
-    let create_product_command = product_logic::CreateProductCommand::try_from(req)
-        .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, e.to_string()))?;
+) -> Result<Json<ProductResponse>, ApiError> {
+    let create_product_command =
+        product_logic::CreateProductCommand::try_from(req).map_err(ApiError::from)?;
 
     let product = product_logic::save_product(&*state.product_repo, create_product_command)
         .await
-        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        .map_err(ApiError::from)?;
 
     Ok(Json(product.into()))
 }
