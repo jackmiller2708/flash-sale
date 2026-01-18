@@ -21,7 +21,7 @@ struct ErrorBody {
 
 impl From<anyhow::Error> for ApiError {
     fn from(value: anyhow::Error) -> Self {
-        let error_message = value.to_string();
+        let fallback_message = value.to_string();
 
         if let Ok(app) = value.downcast::<AppError>() {
             return ApiError::from(app);
@@ -30,7 +30,7 @@ impl From<anyhow::Error> for ApiError {
         Self {
             status: StatusCode::INTERNAL_SERVER_ERROR,
             code: "INTERNAL_ERROR",
-            message: error_message,
+            message: fallback_message,
         }
     }
 }
@@ -54,13 +54,11 @@ impl From<AppError> for ApiError {
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
-        // Create the JSON response body
         let body = Json(ErrorBody {
             code: self.code,
             message: self.message,
         });
 
-        // Return a tuple of (StatusCode, Json(ErrorBody)) which implements IntoResponse
         (self.status, body).into_response()
     }
 }
