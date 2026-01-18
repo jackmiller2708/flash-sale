@@ -1,10 +1,7 @@
 use async_trait::async_trait;
 use sqlx::PgPool;
 
-use crate::{
-    adapters::db::product::ProductRecord, domain::product::Product,
-    ports::ProductRepo,
-};
+use crate::{adapters::db::product::ProductRecord, domain::product::Product, ports::ProductRepo};
 
 pub struct PostgresProductRepo {
     pool: PgPool,
@@ -18,7 +15,11 @@ impl PostgresProductRepo {
 
 #[async_trait]
 impl ProductRepo for PostgresProductRepo {
-    async fn save(&self, product: Product) -> anyhow::Result<Product> {
+    async fn save(
+        &self,
+        tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+        product: Product,
+    ) -> anyhow::Result<Product> {
         let record = ProductRecord::from(product);
         let saved_record = sqlx::query_as!(
             ProductRecord,
@@ -29,7 +30,7 @@ impl ProductRepo for PostgresProductRepo {
             "#,
             record.name,
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&mut **tx)
         .await?;
 
         let saved_product = Product::try_from(saved_record)?;

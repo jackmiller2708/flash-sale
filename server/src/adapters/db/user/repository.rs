@@ -17,7 +17,11 @@ impl PostgresUserRepo {
 
 #[async_trait]
 impl UserRepo for PostgresUserRepo {
-    async fn save(&self, user: User) -> anyhow::Result<User> {
+    async fn save(
+        &self,
+        tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+        user: User,
+    ) -> anyhow::Result<User> {
         let record: UserRecord = sqlx::query_as!(
             UserRecord,
             r#"
@@ -28,7 +32,7 @@ impl UserRepo for PostgresUserRepo {
             user.id,
             user.created_at
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&mut **tx)
         .await?;
 
         Ok(User::from(record))

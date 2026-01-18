@@ -27,15 +27,30 @@ pub async fn run() -> anyhow::Result<()> {
 
     let pool = create_pool(&config).await?;
 
-    let user_repo = Arc::new(PostgresUserRepo::new(pool.clone()));
+    let user_repo =
+        Arc::new(PostgresUserRepo::new(pool.clone())) as Arc<dyn crate::ports::user_repo::UserRepo>;
     tracing::debug!("initialized repository: User");
 
-    let product_repo = Arc::new(PostgresProductRepo::new(pool.clone()));
+    let product_repo = Arc::new(PostgresProductRepo::new(pool.clone()))
+        as Arc<dyn crate::ports::product_repo::ProductRepo>;
     tracing::debug!("initialized repository: Product");
+
+    let flash_sale_repo = Arc::new(
+        crate::adapters::db::flash_sale::repository::PostgresFlashSaleRepo::new(pool.clone()),
+    ) as Arc<dyn crate::ports::flash_sale_repo::FlashSaleRepo>;
+    tracing::debug!("initialized repository: FlashSale");
+
+    let order_repo =
+        Arc::new(crate::adapters::db::order::repository::PostgresOrderRepo::new(pool.clone()))
+            as Arc<dyn crate::ports::order_repo::OrderRepo>;
+    tracing::debug!("initialized repository: Order");
 
     let state = AppState {
         user_repo,
         product_repo,
+        flash_sale_repo,
+        order_repo,
+        db_pool: pool,
     };
     let app = http_router(state);
     tracing::debug!("HTTP router configured");
@@ -43,7 +58,35 @@ pub async fn run() -> anyhow::Result<()> {
     let listener = tokio::net::TcpListener::bind(&config.http_addr).await?;
 
     tracing::info!("Server listening on {}", config.http_addr);
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await?;
 
     Ok(())
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        tokio::signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
+
+    tracing::info!("signal received, starting graceful shutdown");
 }

@@ -23,12 +23,13 @@ impl TryFrom<CreateProductRequest> for CreateProductCommand {
 }
 
 pub async fn save_product<R: ProductRepo + ?Sized>(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     repo: &R,
     command: CreateProductCommand,
 ) -> anyhow::Result<Product> {
     let product = Product::try_from(command)?;
 
-    repo.save(product).await
+    repo.save(tx, product).await
 }
 
 pub async fn get_products<R: ProductRepo + ?Sized>(repo: &R) -> anyhow::Result<Vec<Product>> {

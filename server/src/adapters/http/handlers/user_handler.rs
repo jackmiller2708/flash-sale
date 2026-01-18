@@ -7,7 +7,17 @@ use crate::{adapters::http::dtos::UserResponse, app::state::AppState, logic::use
 pub async fn create_user(
     State(state): State<AppState>,
 ) -> Result<Json<UserResponse>, (axum::http::StatusCode, String)> {
-    let user = user_logic::create_user(&*state.user_repo)
+    let mut tx = state
+        .db_pool
+        .begin()
+        .await
+        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let user = user_logic::create_user(&mut tx, &*state.user_repo)
+        .await
+        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    tx.commit()
         .await
         .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 

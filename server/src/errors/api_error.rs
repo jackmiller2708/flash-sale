@@ -13,10 +13,21 @@ pub struct ApiError {
     pub message: String,
 }
 
-#[derive(serde::Serialize)]
-struct ErrorBody {
-    code: &'static str,
-    message: String,
+impl From<AppError> for ApiError {
+    fn from(value: AppError) -> Self {
+        match value {
+            AppError::Domain(DomainError::ProductNameEmpty) => Self {
+                status: StatusCode::BAD_REQUEST,
+                code: "PRODUCT_NAME_IS_EMPTY",
+                message: "Product name cannot be empty or contain only whitespaces".into(),
+            },
+            _ => Self {
+                status: StatusCode::INTERNAL_SERVER_ERROR,
+                code: "INTERNAL_ERROR",
+                message: "Something went wrong".into(),
+            },
+        }
+    }
 }
 
 impl From<anyhow::Error> for ApiError {
@@ -35,21 +46,10 @@ impl From<anyhow::Error> for ApiError {
     }
 }
 
-impl From<AppError> for ApiError {
-    fn from(value: AppError) -> Self {
-        match value {
-            AppError::Domain(DomainError::ProductNameEmpty) => Self {
-                status: StatusCode::BAD_REQUEST,
-                code: "PRODUCT_NAME_IS_EMPTY",
-                message: "Product name cannot be empty or contain only whitespaces".into(),
-            },
-            _ => Self {
-                status: StatusCode::INTERNAL_SERVER_ERROR,
-                code: "INTERNAL_ERROR",
-                message: "Something went wrong".into(),
-            },
-        }
-    }
+#[derive(serde::Serialize)]
+struct ErrorBody {
+    code: &'static str,
+    message: String,
 }
 
 impl IntoResponse for ApiError {

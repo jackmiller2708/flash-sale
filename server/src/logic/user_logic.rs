@@ -3,11 +3,17 @@ use uuid::Uuid;
 
 use crate::{domain::user::User, ports::UserRepo};
 
-pub async fn create_user<R: UserRepo + ?Sized>(repo: &R) -> anyhow::Result<User> {
-    repo.save(User {
-        id: Uuid::new_v4(),
-        created_at: DateTime::default(),
-    })
+pub async fn create_user<R: UserRepo + ?Sized>(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    repo: &R,
+) -> anyhow::Result<User> {
+    repo.save(
+        tx,
+        User {
+            id: Uuid::new_v4(),
+            created_at: DateTime::default(),
+        },
+    )
     .await
 }
 
