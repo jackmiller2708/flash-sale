@@ -27,4 +27,10 @@
 - [x] Capture P95 and P99 latency while the system is under contention
 - [x] Visualise or grep logs to see the "Lock Wait Duration" component of the total latency
 - [x] Verified JSON logging and Request ID correlation.
-- [x] Verified SQLx pool metrics via Promtheus endpoint.
+- [x] Verified SQLx pool metrics via Prometheus endpoint.
+
+### Load Test Results (30s, 10 VUs)
+- **Throughput**: 88.3 RPS (2,661 total requests)
+- **Latency**: avg=11.86ms, median=7.64ms, P95=26.96ms
+- **Successful requests** (201): avg=66.13ms, P95=296.86ms (reveals lock contention bottleneck)
+- **Checks**: 98.12% passed (expected 409/404 for sold-out scenarios)

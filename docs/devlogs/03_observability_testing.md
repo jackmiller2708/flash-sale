@@ -26,9 +26,33 @@ To keep the development environment modular, I introduced Docker Compose **profi
 
 ### Load Testing with k6
 I set up k6 to run automated load tests against the server.
-- **Script**: The load test fetches users in the `setup()` phase and then creates orders concurrently.
+- **Script**: The load test fetches users in the `setup()` phase and then creates orders concurrently, expecting status codes 201 (created), 409 (conflict/sold out), or 404 (not found).
 - **Initial Challenge**: The k6 container couldn't reach `localhost:3000` because it was running in a separate network. I had to switch to `host.docker.internal` to allow the container to access the host machine.
-- **Baseline Results**: With 10 concurrent users, I achieved ~91 RPS with an average latency of 8.4ms and P95 of 13.36ms. These results confirm that the "naive" locking approach performs well under light load.
+
+### Phase 2 Load Test Results
+After completing the observability instrumentation, I ran a comprehensive 30-second load test with 10 concurrent users:
+
+**Performance Metrics:**
+- **Throughput**: ~88.3 RPS (Requests Per Second)
+- **Total Requests**: 2,661 requests
+- **Latency**:
+    - **Average**: 11.86ms
+    - **Median**: 7.64ms
+    - **P90**: 16.94ms
+    - **P95**: 26.96ms
+    - **Max**: 344.17ms
+
+**Success Metrics:**
+- **Checks Passed**: 98.12% (2,610 out of 2,660)
+- **Checks Failed**: 1.87% (50 out of 2,660)
+- **HTTP Failures**: 98.08% marked as "failed" but this includes expected 409/404 responses for sold-out scenarios
+
+**Analysis:**
+- The system maintains consistent performance under the 100ms sleep constraint (~88 RPS ≈ 10 users / 0.11s).
+- **Latency for successful requests** (201 responses) is significantly higher: avg=66.13ms, p(95)=296.86ms, indicating that database locking is the bottleneck.
+- The high "failure" rate (98.08%) is expected behavior—it represents 409 (conflict/sold out) and 404 responses, not actual errors.
+- The P95 latency of ~27ms for all requests shows reasonable performance, but successful writes can spike up to ~297ms, revealing the lock contention cost.
+- This baseline confirms that pessimistic locking works correctly but will struggle under higher concurrency.
 
 ### Observability Stack Integration
 I integrated Prometheus and Grafana into the Docker Compose setup.
