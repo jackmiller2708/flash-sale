@@ -11,9 +11,9 @@
 
 ## 2. Latency Metrics
 
-- [ ] Add `metrics` or `prometheus` handler
-- [ ] Instrument `POST /purchase` handler to record execution time
-- [ ] Create a histogram metric for "purchase_request_duration_seconds"
+- [x] Add `metrics` or `prometheus` handler
+- [x] Instrument `POST /purchase` handler to record execution time (via global metrics middleware)
+- [x] Create a histogram metric for "http_requests_duration_seconds"
 
 ## 3. Database Observability
 
@@ -23,6 +23,6 @@
 
 ## 4. Verification
 
-- [ ] Run load test from Phase 1
-- [ ] Capture P95 and P99 latency while the system is under contention
-- [ ] Visualise or grep logs to see the "Lock Wait Duration" component of the total latency
+- [x] Run load test from Phase 1
+- [x] Capture P95 and P99 latency while the system is under contention
+- [x] Visualise or grep logs to see the "Lock Wait Duration" component of the total latency

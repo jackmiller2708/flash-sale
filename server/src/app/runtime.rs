@@ -1,3 +1,4 @@
+use metrics_exporter_prometheus::PrometheusBuilder;
 use std::sync::Arc;
 use tracing_subscriber::EnvFilter;
 
@@ -21,6 +22,12 @@ pub async fn run() -> anyhow::Result<()> {
         .with_line_number(false)
         .compact()
         .init();
+
+    // Initialize Prometheus metrics
+    let prometheus_handle = PrometheusBuilder::new()
+        .install_recorder()
+        .expect("failed to install Prometheus recorder");
+    tracing::info!("Prometheus metrics initialized");
 
     let config = Config::from_env()?;
     tracing::debug!("Configuration loaded: {:?}", config);
@@ -49,6 +56,7 @@ pub async fn run() -> anyhow::Result<()> {
         flash_sale_repo,
         order_repo,
         db_pool: pool,
+        prometheus_handle,
     };
     let app = http_router(state);
     tracing::debug!("HTTP router configured");

@@ -12,7 +12,9 @@ impl Config {
         dotenvy::dotenv().ok();
 
         Ok(Self {
-            http_addr: "127.0.0.1:3000".parse()?,
+            http_addr: std::env::var("HTTP_ADDR")
+                .unwrap_or_else(|_| "0.0.0.0:3000".to_string())
+                .parse()?,
             database_url: std::env::var("DATABASE_URL")
                 .context("DATABASE_URL must be set (e.g. in .env)")?,
         })

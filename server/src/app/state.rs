@@ -1,3 +1,4 @@
+use metrics_exporter_prometheus::PrometheusHandle;
 use std::sync::Arc;
 
 use crate::ports::{
@@ -12,6 +13,7 @@ pub struct AppState {
     pub flash_sale_repo: Arc<dyn FlashSaleRepo>,
     pub order_repo: Arc<dyn OrderRepo>,
     pub db_pool: sqlx::PgPool,
+    pub prometheus_handle: PrometheusHandle,
 }
 
 impl AppState {
