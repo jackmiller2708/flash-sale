@@ -3,7 +3,9 @@ use sqlx::PgConnection;
 use uuid::Uuid;
 
 use crate::{
-    adapters::db::error_mapper::map_sqlx_error, domain::flash_sale::FlashSale, errors::RepoError,
+    adapters::db::{error_mapper::map_sqlx_error, flash_sale::FlashSaleRecord},
+    domain::flash_sale::FlashSale,
+    errors::RepoError,
     ports::flash_sale_repo::FlashSaleRepo,
 };
 
@@ -23,8 +25,8 @@ impl FlashSaleRepo for PostgresFlashSaleRepo {
         id: Uuid,
     ) -> Result<Option<FlashSale>, RepoError> {
         // SELECT ... FOR UPDATE is key here
-        let rec = sqlx::query_as!(
-            FlashSale,
+        let record = sqlx::query_as!(
+            FlashSaleRecord,
             r#"
             SELECT id, product_id, start_time, end_time, total_inventory, 
                    remaining_inventory, per_user_limit, created_at
@@ -38,7 +40,7 @@ impl FlashSaleRepo for PostgresFlashSaleRepo {
         .await
         .map_err(|e| map_sqlx_error(e, "find_flash_sale_with_lock", "flash_sale"))?;
 
-        Ok(rec)
+        Ok(record.map(FlashSale::from))
     }
 
     async fn update(
@@ -46,8 +48,8 @@ impl FlashSaleRepo for PostgresFlashSaleRepo {
         conn: &mut PgConnection,
         flash_sale: &FlashSale,
     ) -> Result<FlashSale, RepoError> {
-        let rec = sqlx::query_as!(
-            FlashSale,
+        let saved_record = sqlx::query_as!(
+            FlashSaleRecord,
             r#"
             UPDATE flash_sales
             SET remaining_inventory = $2
@@ -62,6 +64,6 @@ impl FlashSaleRepo for PostgresFlashSaleRepo {
         .await
         .map_err(|e| map_sqlx_error(e, "update_flash_sale", "flash_sale"))?;
 
-        Ok(rec)
+        Ok(saved_record.into())
     }
 }

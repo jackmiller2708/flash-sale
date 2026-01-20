@@ -12,7 +12,7 @@
 ## 2. Latency Metrics
 
 - [x] Add `metrics` or `prometheus` handler
-- [x] Instrument `POST /purchase` handler to record execution time (via global metrics middleware)
+- [x] Instrument `POST /orders` handler to record execution time (via global metrics middleware)
 - [x] Create a histogram metric for "http_requests_duration_seconds"
 
 ## 3. Database Observability

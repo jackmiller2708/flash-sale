@@ -42,7 +42,7 @@
 
 ### Objectives
 
-- Implement a correct but slow purchase flow
+- Implement a correct but slow order flow
 - Centralize inventory as a single lock
 
 ### Design Choices

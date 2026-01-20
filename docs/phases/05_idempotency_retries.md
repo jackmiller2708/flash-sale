@@ -5,11 +5,11 @@
 ## 1. Idempotency Key Schema
 
 - [ ] Add `idempotency_key` column to `orders` table (unique constraint)
-- [ ] Update `POST /purchase` to require `Idempotency-Key` header
+- [ ] Update `POST /orders` to require `Idempotency-Key` header
 
 ## 2. Logic Implementation
 
-- [ ] Modify Purchase logic:
+- [ ] Modify Order logic:
   - Check if Order with `idempotency_key` already exists
   - If yes, return the _existing_ order status/result (Success)
   - If no, proceed with inventory check and creation

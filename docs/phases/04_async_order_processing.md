@@ -4,8 +4,8 @@
 
 ## 1. Internal Job Queue
 
-- [ ] Create a struct `PurchaseJob` (user_id, sale_id)
-- [ ] Replace synchronous DB call in `POST /purchase` with "Send Job to Queue"
+- [ ] Create a struct `OrderJob` (user_id, sale_id)
+- [ ] Replace synchronous DB call in `POST /orders` with "Send Job to Queue"
 - [ ] Return `202 Accepted` immediately after enqueueing
 
 ## 2. Background Worker

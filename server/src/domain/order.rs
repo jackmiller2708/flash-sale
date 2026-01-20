@@ -2,6 +2,8 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::adapters::db::order::OrderRecord;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
 #[sqlx(type_name = "order_status", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum OrderStatus {
@@ -29,6 +31,19 @@ impl Order {
             quantity,
             status: OrderStatus::Pending,
             created_at: Utc::now(),
+        }
+    }
+}
+
+impl From<OrderRecord> for Order {
+    fn from(value: OrderRecord) -> Self {
+        Self {
+            id: value.id,
+            user_id: value.user_id,
+            flash_sale_id: value.flash_sale_id,
+            quantity: value.quantity,
+            status: value.status,
+            created_at: value.created_at,
         }
     }
 }

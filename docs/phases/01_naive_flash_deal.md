@@ -1,6 +1,6 @@
 # Phase 1: Naive FlashDeal Checklists
 
-**Goal:** Implement a correct but slow purchase flow using pessimistic locking.
+**Goal:** Implement a correct but slow order flow using pessimistic locking.
 
 ## 1. Domain Modeling
 
@@ -14,9 +14,9 @@
 - [x] Implement Repository method to fetch Flash Sale with lock (`SELECT * FROM flash_sales WHERE id = $1 FOR UPDATE`)
 - [x] Implement Repository method to decrement inventory
 
-## 3. Purchase Transaction Flow
+## 3. Order Transaction Flow
 
-- [x] Create `POST /purchase` handler
+- [x] Create `POST /orders` handler
 - [x] Start DB transaction
 - [x] Fetch flash sale (locking the row)
 - [x] Check if inventory > 0
@@ -26,6 +26,6 @@
 
 ## 4. Testing Failure Modes
 
-- [x] Create a load test script (e.g., `k6` or simple bash loop) to spam the purchase endpoint
+- [x] Create a load test script (e.g., `k6` or simple bash loop) to spam the order endpoint
 - [x] Verify that no inventory is oversold (Correctness)
 - [x] Observe latency increase as requests queue up for the lock (Failure Mode: Latency Amplification)

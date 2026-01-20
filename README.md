@@ -19,7 +19,7 @@ The project follows a hexagonal architecture (Ports & Adapters) to decouple core
 ## Roadmap Overview
 The project is divided into several iterative phases:
 - **Phase 0: Foundations** - Basic HTTP server and DB integration.
-- **Phase 1: Naive FlashDeal** - Transactional purchase flow with pessimistic locking.
+- **Phase 1: Naive FlashDeal** - Transactional order flow with pessimistic locking.
 - **Phase 2: Observability** - Measuring performance and identifying bottlenecks.
 - **Phase 3+: Scaling** - Admission control, async processing, and sharded inventory.
 
@@ -30,20 +30,28 @@ The project is divided into several iterative phases:
 - [k6](https://k6.io/) (for load testing)
 
 ### Setup
-1. Start the database: `docker-compose up -d postgres`
+1. Start the core database:
+   ```powershell
+   docker-compose up -d postgres
+   ```
 2. Run migrations: `sqlx migrate run` (from the `server` directory)
 3. Start the server: `cargo run`
 
-### Running Load Tests
-Since `k6` is running via Docker, use:
-```powershell
-docker-compose run --rm k6 run /scripts/load_test.js
-```
-*Note: The k6 container targets `http://host.docker.internal:3000` by default to reach your host machine.*
+## Modular Service Control
+The project uses Docker Compose **profiles** to let you start exactly what you need.
+
+| Command                                                                | Purpose                                      |
+| :--------------------------------------------------------------------- | :------------------------------------------- |
+| `docker-compose up -d postgres`                                        | Start only the database (default).           |
+| `docker-compose --profile observability up -d`                         | Start Prometheus and Grafana for monitoring. |
+| `docker-compose --profile tools run --rm k6 run /scripts/load_test.js` | Run a load test.                             |
+| `docker-compose --profile "*" up -d`                                   | Start everything.                            |
 
 ## Observability
-The system is instrumented with Prometheus metrics. You can access the raw metrics at:
-- **Metrics Endpoint**: [http://localhost:3000/metrics](http://localhost:3000/metrics)
+Once the `observability` profile is running:
+- **Prometheus**: [http://localhost:9090](http://localhost:9090) (Scrapes the Rust server).
+- **Grafana**: [http://localhost:3001](http://localhost:3001) (Pre-configured with anonymous admin access).
+- **Metrics Endpoint**: [http://localhost:3000/metrics](http://localhost:3000/metrics) (Raw data from server).
 
 ### Key Metrics
 - `http_requests_duration_seconds_bucket`: The histogram buckets for request latency.

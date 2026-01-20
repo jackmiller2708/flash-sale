@@ -15,8 +15,5 @@ pub fn routes() -> Router<AppState> {
         .route("/users/{id}", get(handlers::user_handler::get_user_by_id))
         .route("/products", post(handlers::product_handler::create_product))
         .route("/products", get(handlers::product_handler::get_products))
-        .route(
-            "/purchase",
-            post(handlers::purchase_handler::create_purchase),
-        )
+        .route("/orders", post(handlers::order_handler::create_order))
 }

@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use sqlx::PgConnection;
 
 use crate::{
-    adapters::db::error_mapper::map_sqlx_error,
+    adapters::db::{error_mapper::map_sqlx_error, order::OrderRecord},
     domain::order::{Order, OrderStatus},
     errors::RepoError,
     ports::order_repo::OrderRepo,
@@ -19,8 +19,8 @@ impl PostgresOrderRepo {
 #[async_trait]
 impl OrderRepo for PostgresOrderRepo {
     async fn save(&self, conn: &mut PgConnection, order: &Order) -> Result<Order, RepoError> {
-        let rec = sqlx::query_as!(
-            Order,
+        let saved_record = sqlx::query_as!(
+            OrderRecord,
             r#"
             INSERT INTO orders (id, user_id, flash_sale_id, quantity, status, created_at)
             VALUES ($1, $2, $3, $4, $5, $6)
@@ -37,6 +37,6 @@ impl OrderRepo for PostgresOrderRepo {
         .await
         .map_err(|e| map_sqlx_error(e, "save_order", "order"))?;
 
-        Ok(rec)
+        Ok(saved_record.into())
     }
 }

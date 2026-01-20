@@ -5,7 +5,7 @@
 ## 1. Inventory Sharding
 
 - [ ] Split `total_inventory` into multiple rows (e.g., 10 shards per flash sale) in `inventory_shards` table
-- [ ] Logic Update: Randomly select a shard to attempt purchase
+- [ ] Logic Update: Randomly select a shard to attempt order
 - [ ] If shard is empty/locked, try another shard (or fail fast depending on strategy)
 
 ## 2. Optimistic Locking

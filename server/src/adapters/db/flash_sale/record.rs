@@ -1,11 +1,11 @@
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
 use uuid::Uuid;
 
-use crate::adapters::db::flash_sale::FlashSaleRecord;
+use crate::domain::flash_sale::FlashSale;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FlashSale {
+#[derive(Debug, FromRow)]
+pub struct FlashSaleRecord {
     pub id: Uuid,
     pub product_id: Uuid,
     pub start_time: DateTime<Utc>,
@@ -16,19 +16,8 @@ pub struct FlashSale {
     pub created_at: DateTime<Utc>,
 }
 
-impl FlashSale {
-    pub fn is_active(&self) -> bool {
-        let now = Utc::now();
-        now >= self.start_time && now <= self.end_time
-    }
-
-    pub fn is_sold_out(&self) -> bool {
-        self.remaining_inventory <= 0
-    }
-}
-
-impl From<FlashSaleRecord> for FlashSale {
-    fn from(value: FlashSaleRecord) -> Self {
+impl From<FlashSale> for FlashSaleRecord {
+    fn from(value: FlashSale) -> Self {
         Self {
             id: value.id,
             product_id: value.product_id,
