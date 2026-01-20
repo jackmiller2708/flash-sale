@@ -1,27 +1,24 @@
-use anyhow::Context;
 use async_trait::async_trait;
-use sqlx::PgPool;
+use sqlx::PgConnection;
 
-use crate::domain::order::{Order, OrderStatus};
-use crate::ports::order_repo::OrderRepo;
+use crate::{
+    adapters::db::error_mapper::map_sqlx_error,
+    domain::order::{Order, OrderStatus},
+    errors::RepoError,
+    ports::order_repo::OrderRepo,
+};
 
-pub struct PostgresOrderRepo {
-    pool: PgPool,
-}
+pub struct PostgresOrderRepo;
 
 impl PostgresOrderRepo {
-    pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+    pub fn new() -> Self {
+        Self
     }
 }
 
 #[async_trait]
 impl OrderRepo for PostgresOrderRepo {
-    async fn save(
-        &self,
-        tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
-        order: &Order,
-    ) -> anyhow::Result<Order> {
+    async fn save(&self, conn: &mut PgConnection, order: &Order) -> Result<Order, RepoError> {
         let rec = sqlx::query_as!(
             Order,
             r#"
@@ -36,9 +33,9 @@ impl OrderRepo for PostgresOrderRepo {
             order.status as OrderStatus,
             order.created_at
         )
-        .fetch_one(&mut **tx)
+        .fetch_one(conn)
         .await
-        .context("Failed to save order")?;
+        .map_err(|e| map_sqlx_error(e, "save_order", "order"))?;
 
         Ok(rec)
     }

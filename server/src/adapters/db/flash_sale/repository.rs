@@ -1,18 +1,17 @@
-use anyhow::Context;
 use async_trait::async_trait;
-use sqlx::PgPool;
+use sqlx::PgConnection;
 use uuid::Uuid;
 
-use crate::domain::flash_sale::FlashSale;
-use crate::ports::flash_sale_repo::FlashSaleRepo;
+use crate::{
+    adapters::db::error_mapper::map_sqlx_error, domain::flash_sale::FlashSale, errors::RepoError,
+    ports::flash_sale_repo::FlashSaleRepo,
+};
 
-pub struct PostgresFlashSaleRepo {
-    pool: PgPool,
-}
+pub struct PostgresFlashSaleRepo;
 
 impl PostgresFlashSaleRepo {
-    pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+    pub fn new() -> Self {
+        Self
     }
 }
 
@@ -20,9 +19,9 @@ impl PostgresFlashSaleRepo {
 impl FlashSaleRepo for PostgresFlashSaleRepo {
     async fn find_by_id_with_lock(
         &self,
-        tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+        conn: &mut PgConnection,
         id: Uuid,
-    ) -> anyhow::Result<Option<FlashSale>> {
+    ) -> Result<Option<FlashSale>, RepoError> {
         // SELECT ... FOR UPDATE is key here
         let rec = sqlx::query_as!(
             FlashSale,
@@ -35,18 +34,18 @@ impl FlashSaleRepo for PostgresFlashSaleRepo {
             "#,
             id
         )
-        .fetch_optional(&mut **tx)
+        .fetch_optional(conn)
         .await
-        .context("Failed to fetch flash sale with lock")?;
+        .map_err(|e| map_sqlx_error(e, "find_flash_sale_with_lock", "flash_sale"))?;
 
         Ok(rec)
     }
 
     async fn update(
         &self,
-        tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+        conn: &mut PgConnection,
         flash_sale: &FlashSale,
-    ) -> anyhow::Result<FlashSale> {
+    ) -> Result<FlashSale, RepoError> {
         let rec = sqlx::query_as!(
             FlashSale,
             r#"
@@ -59,9 +58,9 @@ impl FlashSaleRepo for PostgresFlashSaleRepo {
             flash_sale.id,
             flash_sale.remaining_inventory
         )
-        .fetch_one(&mut **tx)
+        .fetch_one(conn)
         .await
-        .context("Failed to update flash sale")?;
+        .map_err(|e| map_sqlx_error(e, "update_flash_sale", "flash_sale"))?;
 
         Ok(rec)
     }

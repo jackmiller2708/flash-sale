@@ -1,27 +1,25 @@
 use async_trait::async_trait;
-use sqlx::PgPool;
+use sqlx::PgConnection;
 use uuid::Uuid;
 
-use crate::adapters::db::user::UserRecord;
-use crate::{domain::user::User, ports::UserRepo};
+use crate::{
+    adapters::db::{error_mapper::map_sqlx_error, user::UserRecord},
+    domain::user::User,
+    errors::RepoError,
+    ports::UserRepo,
+};
 
-pub struct PostgresUserRepo {
-    pool: PgPool,
-}
+pub struct PostgresUserRepo;
 
 impl PostgresUserRepo {
-    pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+    pub fn new() -> Self {
+        Self
     }
 }
 
 #[async_trait]
 impl UserRepo for PostgresUserRepo {
-    async fn save(
-        &self,
-        tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
-        user: User,
-    ) -> anyhow::Result<User> {
+    async fn save(&self, conn: &mut PgConnection, user: User) -> Result<User, RepoError> {
         let record: UserRecord = sqlx::query_as!(
             UserRecord,
             r#"
@@ -32,13 +30,14 @@ impl UserRepo for PostgresUserRepo {
             user.id,
             user.created_at
         )
-        .fetch_one(&mut **tx)
-        .await?;
+        .fetch_one(conn)
+        .await
+        .map_err(|e| map_sqlx_error(e, "save_user", "user"))?;
 
         Ok(User::from(record))
     }
 
-    async fn get_all(&self) -> anyhow::Result<Vec<User>> {
+    async fn get_all(&self, conn: &mut PgConnection) -> Result<Vec<User>, RepoError> {
         let rows = sqlx::query_as!(
             UserRecord,
             r#"
@@ -46,13 +45,14 @@ impl UserRepo for PostgresUserRepo {
             FROM users
             "#
         )
-        .fetch_all(&self.pool)
-        .await?;
+        .fetch_all(conn)
+        .await
+        .map_err(|e| map_sqlx_error(e, "get_all_users", "user"))?;
 
         Ok(rows.into_iter().map(|r| User::from(r)).collect())
     }
 
-    async fn get_by_id(&self, id: Uuid) -> anyhow::Result<User> {
+    async fn get_by_id(&self, conn: &mut PgConnection, id: Uuid) -> Result<User, RepoError> {
         let row = sqlx::query_as!(
             UserRecord,
             r#"
@@ -62,12 +62,15 @@ impl UserRepo for PostgresUserRepo {
             "#,
             id
         )
-        .fetch_optional(&self.pool)
-        .await?;
+        .fetch_optional(conn)
+        .await
+        .map_err(|e| map_sqlx_error(e, "get_user_by_id", "user"))?;
 
         match row {
             Some(r) => Ok(User::from(r)),
-            None => Err(anyhow::anyhow!("User with id {} not found", id)),
+            None => Err(RepoError::NotFound {
+                entity_type: "user",
+            }),
         }
     }
 }

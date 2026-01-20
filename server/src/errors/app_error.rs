@@ -1,4 +1,4 @@
-use crate::errors::{RepoError, domain_error::DomainError};
+use crate::errors::{DomainError, RepoError, ServiceError};
 
 #[derive(Debug, thiserror::Error)]
 pub enum AppError {
@@ -7,6 +7,9 @@ pub enum AppError {
 
     #[error(transparent)]
     Repo(#[from] RepoError),
+
+    #[error(transparent)]
+    Service(#[from] ServiceError),
 
     #[error("unexpected error")]
     Unexpected(#[from] anyhow::Error),

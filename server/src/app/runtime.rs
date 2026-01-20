@@ -27,22 +27,20 @@ pub async fn run() -> anyhow::Result<()> {
 
     let pool = create_pool(&config).await?;
 
-    let user_repo =
-        Arc::new(PostgresUserRepo::new(pool.clone())) as Arc<dyn crate::ports::user_repo::UserRepo>;
+    let user_repo = Arc::new(PostgresUserRepo::new()) as Arc<dyn crate::ports::user_repo::UserRepo>;
     tracing::debug!("initialized repository: User");
 
-    let product_repo = Arc::new(PostgresProductRepo::new(pool.clone()))
-        as Arc<dyn crate::ports::product_repo::ProductRepo>;
+    let product_repo =
+        Arc::new(PostgresProductRepo::new()) as Arc<dyn crate::ports::product_repo::ProductRepo>;
     tracing::debug!("initialized repository: Product");
 
-    let flash_sale_repo = Arc::new(
-        crate::adapters::db::flash_sale::repository::PostgresFlashSaleRepo::new(pool.clone()),
-    ) as Arc<dyn crate::ports::flash_sale_repo::FlashSaleRepo>;
+    let flash_sale_repo =
+        Arc::new(crate::adapters::db::flash_sale::repository::PostgresFlashSaleRepo::new())
+            as Arc<dyn crate::ports::flash_sale_repo::FlashSaleRepo>;
     tracing::debug!("initialized repository: FlashSale");
 
-    let order_repo =
-        Arc::new(crate::adapters::db::order::repository::PostgresOrderRepo::new(pool.clone()))
-            as Arc<dyn crate::ports::order_repo::OrderRepo>;
+    let order_repo = Arc::new(crate::adapters::db::order::repository::PostgresOrderRepo::new())
+        as Arc<dyn crate::ports::order_repo::OrderRepo>;
     tracing::debug!("initialized repository: Order");
 
     let state = AppState {

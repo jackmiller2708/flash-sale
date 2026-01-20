@@ -1,8 +1,9 @@
+use sqlx::PgConnection;
 use uuid::Uuid;
 
 use crate::{
     adapters::http::dtos::product_dto::CreateProductRequest, domain::product::Product,
-    ports::ProductRepo,
+    errors::AppError, ports::ProductRepo,
 };
 
 #[derive(Debug, Clone)]
@@ -12,7 +13,7 @@ pub struct CreateProductCommand {
 }
 
 impl TryFrom<CreateProductRequest> for CreateProductCommand {
-    type Error = anyhow::Error;
+    type Error = AppError;
 
     fn try_from(value: CreateProductRequest) -> Result<Self, Self::Error> {
         Ok(Self {
@@ -23,15 +24,17 @@ impl TryFrom<CreateProductRequest> for CreateProductCommand {
 }
 
 pub async fn save_product<R: ProductRepo + ?Sized>(
-    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    conn: &mut PgConnection,
     repo: &R,
     command: CreateProductCommand,
-) -> anyhow::Result<Product> {
+) -> Result<Product, AppError> {
     let product = Product::try_from(command)?;
-
-    repo.save(tx, product).await
+    repo.save(conn, product).await.map_err(Into::into)
 }
 
-pub async fn get_products<R: ProductRepo + ?Sized>(repo: &R) -> anyhow::Result<Vec<Product>> {
-    repo.get_all().await
+pub async fn get_products<R: ProductRepo + ?Sized>(
+    conn: &mut PgConnection,
+    repo: &R,
+) -> Result<Vec<Product>, AppError> {
+    repo.get_all(conn).await.map_err(Into::into)
 }

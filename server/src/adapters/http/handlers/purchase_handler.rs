@@ -27,7 +27,7 @@ pub async fn create_purchase(
     // 1. Fetch Flash Sale with Lock
     let flash_sale = match state
         .flash_sale_repo
-        .find_by_id_with_lock(&mut tx, payload.flash_sale_id)
+        .find_by_id_with_lock(&mut *tx, payload.flash_sale_id)
         .await
     {
         Ok(Some(fs)) => fs,
@@ -58,7 +58,7 @@ pub async fn create_purchase(
 
     if let Err(e) = state
         .flash_sale_repo
-        .update(&mut tx, &updated_flash_sale)
+        .update(&mut *tx, &updated_flash_sale)
         .await
     {
         return (
@@ -72,7 +72,7 @@ pub async fn create_purchase(
     let user_id = Uuid::new_v4();
     let order = Order::new(user_id, payload.flash_sale_id, payload.quantity);
 
-    let saved_order = match state.order_repo.save(&mut tx, &order).await {
+    let saved_order = match state.order_repo.save(&mut *tx, &order).await {
         Ok(o) => o,
         Err(e) => {
             return (

@@ -1,17 +1,18 @@
-use crate::domain::flash_sale::FlashSale;
+use crate::{domain::flash_sale::FlashSale, errors::RepoError};
 use async_trait::async_trait;
+use sqlx::PgConnection;
 use uuid::Uuid;
 
 #[async_trait]
 pub trait FlashSaleRepo: Send + Sync {
     async fn find_by_id_with_lock(
         &self,
-        tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+        conn: &mut PgConnection,
         id: Uuid,
-    ) -> anyhow::Result<Option<FlashSale>>;
+    ) -> Result<Option<FlashSale>, RepoError>;
     async fn update(
         &self,
-        tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+        conn: &mut PgConnection,
         flash_sale: &FlashSale,
-    ) -> anyhow::Result<FlashSale>;
+    ) -> Result<FlashSale, RepoError>;
 }

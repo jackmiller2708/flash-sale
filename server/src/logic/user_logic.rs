@@ -1,26 +1,27 @@
-use chrono::DateTime;
+use sqlx::PgConnection;
 use uuid::Uuid;
 
-use crate::{domain::user::User, ports::UserRepo};
+use crate::{domain::user::User, errors::AppError, ports::UserRepo};
 
-pub async fn create_user<R: UserRepo + ?Sized>(
-    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+pub async fn save_user<R: UserRepo + ?Sized>(
+    conn: &mut PgConnection,
     repo: &R,
-) -> anyhow::Result<User> {
-    repo.save(
-        tx,
-        User {
-            id: Uuid::new_v4(),
-            created_at: DateTime::default(),
-        },
-    )
-    .await
+    user: User,
+) -> Result<User, AppError> {
+    repo.save(conn, user).await.map_err(Into::into)
 }
 
-pub async fn get_users<R: UserRepo + ?Sized>(repo: &R) -> anyhow::Result<Vec<User>> {
-    repo.get_all().await
+pub async fn get_users<R: UserRepo + ?Sized>(
+    conn: &mut PgConnection,
+    repo: &R,
+) -> Result<Vec<User>, AppError> {
+    repo.get_all(conn).await.map_err(Into::into)
 }
 
-pub async fn get_user_by_id<R: UserRepo + ?Sized>(repo: &R, id: Uuid) -> anyhow::Result<User> {
-    repo.get_by_id(id).await
+pub async fn get_user_by_id<R: UserRepo + ?Sized>(
+    conn: &mut PgConnection,
+    repo: &R,
+    id: Uuid,
+) -> Result<User, AppError> {
+    repo.get_by_id(conn, id).await.map_err(Into::into)
 }
