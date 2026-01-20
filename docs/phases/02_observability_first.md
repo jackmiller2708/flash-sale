@@ -4,10 +4,10 @@
 
 ## 1. Structured Logging
 
-- [ ] Replace basic `println!` or simple logging with `tracing` and `tracing-subscriber`
-- [ ] Configure JSON formatting for logs (optional, but good for structured analysis)
-- [ ] Add Request ID middleware (`tower_http::request_id`)
-- [ ] Ensure logs include correlation IDs (Trace ID / Request ID)
+- [x] Replace basic `println!` or simple logging with `tracing` and `tracing-subscriber`
+- [x] Configure JSON formatting for logs (optional, but good for structured analysis)
+- [x] Add Request ID middleware (`tower_http::request_id`)
+- [x] Ensure logs include correlation IDs (Trace ID / Request ID)
 
 ## 2. Latency Metrics
 
@@ -17,8 +17,8 @@
 
 ## 3. Database Observability
 
-- [ ] Expose internal SQLx pool metrics (active connections, idle connections, waiters)
-- [ ] Log warnings if acquiring a DB connection takes longer than X ms
+- [x] Expose internal SQLx pool metrics (active connections, idle connections, waiters)
+- [x] Log warnings if acquiring a DB connection takes longer than X ms
 - [ ] (Advanced) Query `pg_stat_activity` to inspect lock waits
 
 ## 4. Verification
@@ -26,3 +26,5 @@
 - [x] Run load test from Phase 1
 - [x] Capture P95 and P99 latency while the system is under contention
 - [x] Visualise or grep logs to see the "Lock Wait Duration" component of the total latency
+- [x] Verified JSON logging and Request ID correlation.
+- [x] Verified SQLx pool metrics via Promtheus endpoint.

@@ -8,8 +8,8 @@ axum = "0.8"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal"] }
 serde = { version = "1", features = ["derive"] }
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-tower-http = { version = "0.6", features = ["trace"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tower-http = { version = "0.6", features = ["trace", "request-id", "util"] }
 tower = "0.5"
 anyhow = "1"
 async-trait = "0.1"

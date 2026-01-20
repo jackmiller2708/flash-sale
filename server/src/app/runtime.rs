@@ -20,7 +20,7 @@ pub async fn run() -> anyhow::Result<()> {
         .with_thread_ids(false)
         .with_file(false)
         .with_line_number(false)
-        .compact()
+        .json() // Enable JSON formatting
         .init();
 
     // Initialize Prometheus metrics with Histogram buckets
@@ -37,6 +37,23 @@ pub async fn run() -> anyhow::Result<()> {
     tracing::debug!("Configuration loaded: {:?}", config);
 
     let pool = create_pool(&config).await?;
+
+    // Periodically record SQLx pool metrics
+    let pool_clone = pool.clone();
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(std::time::Duration::from_secs(5));
+        loop {
+            interval.tick().await;
+
+            let stats = pool_clone.size();
+            let idle = pool_clone.num_idle();
+
+            metrics::gauge!("sqlx_pool_active_connections").set(stats as f64 - idle as f64);
+            metrics::gauge!("sqlx_pool_idle_connections").set(idle as f64);
+            // sqlx 0.8 stats don't easily expose 'waiters' without more complex access,
+            // but we can at least monitor the pool size and idle connections.
+        }
+    });
 
     let user_repo = Arc::new(PostgresUserRepo::new()) as Arc<dyn crate::ports::user_repo::UserRepo>;
     tracing::debug!("initialized repository: User");

@@ -13,6 +13,10 @@ pub fn http_router(state: AppState) -> Router {
         .layer(axum::middleware::from_fn(
             crate::adapters::http::middleware::track_metrics,
         ))
-        .layer(logging())
+        .layer(logging::<axum::body::Body>())
+        .layer(tower_http::request_id::PropagateRequestIdLayer::x_request_id())
+        .layer(tower_http::request_id::SetRequestIdLayer::x_request_id(
+            tower_http::request_id::MakeRequestUuid,
+        ))
         .with_state(state)
 }

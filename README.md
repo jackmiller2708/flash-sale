@@ -3,7 +3,7 @@
 A high-performance flash sale system built with Rust, designed for backend mastery and systems engineering practice.
 
 ## Core Purpose
-This is a personal project aimed at mastering:
+This is my personal project where I'm mastering:
 - **Rust Language**: Ownership, async, traits, and idiomatic patterns.
 - **System Design**: Handling high contention, distributed systems, and performance tuning.
 - **Backend Concepts**: Pessimistic/Optimistic locking, admission control, idempotency, and observability.
@@ -17,11 +17,11 @@ The project follows a hexagonal architecture (Ports & Adapters) to decouple core
 - `app`: Application initialization and runtime.
 
 ## Roadmap Overview
-The project is divided into several iterative phases:
-- **Phase 0: Foundations** - Basic HTTP server and DB integration.
-- **Phase 1: Naive FlashDeal** - Transactional order flow with pessimistic locking.
-- **Phase 2: Observability** - Measuring performance and identifying bottlenecks.
-- **Phase 3+: Scaling** - Admission control, async processing, and sharded inventory.
+I'm building this project through several iterative phases:
+- **Phase 0: Foundations** ✅ - Basic HTTP server and DB integration.
+- **Phase 1: Naive FlashDeal** ✅ - Transactional order flow with pessimistic locking.
+- **Phase 2: Observability** ✅ - Measuring performance and identifying bottlenecks.
+- **Phase 3+: Scaling** 🚧 - Admission control, async processing, and sharded inventory.
 
 ## Getting Started
 ### Dependencies

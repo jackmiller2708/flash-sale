@@ -20,7 +20,7 @@ impl PostgresUserRepo {
 #[async_trait]
 impl UserRepo for PostgresUserRepo {
     async fn save(&self, conn: &mut PgConnection, user: User) -> Result<User, RepoError> {
-        let record: UserRecord = sqlx::query_as!(
+        let record = sqlx::query_as!(
             UserRecord,
             r#"
             INSERT INTO users (id, created_at)
