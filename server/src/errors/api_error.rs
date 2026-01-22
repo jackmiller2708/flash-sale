@@ -84,26 +84,45 @@ impl From<AppError> for ApiError {
                 code: "CHECK_VIOLATION",
                 message: format!("Constraint violation: {}", constraint),
             },
-            AppError::Repo(crate::errors::RepoError::SerializationFailure) => Self {
-                status: StatusCode::CONFLICT,
-                code: "CONCURRENT_MODIFICATION",
-                message: "Resource was modified by another request".into(),
-            },
-            AppError::Repo(crate::errors::RepoError::Transaction(_)) => Self {
-                status: StatusCode::INTERNAL_SERVER_ERROR,
-                code: "TRANSACTION_ERROR",
-                message: "Database transaction failed".into(),
-            },
-            AppError::Repo(crate::errors::RepoError::ConnectionPool(_)) => Self {
-                status: StatusCode::SERVICE_UNAVAILABLE,
-                code: "DATABASE_UNAVAILABLE",
-                message: "Database connection failed".into(),
-            },
-            AppError::Repo(crate::errors::RepoError::Database { .. }) => Self {
-                status: StatusCode::INTERNAL_SERVER_ERROR,
-                code: "DATABASE_ERROR",
-                message: "Database operation failed".into(),
-            },
+            AppError::Repo(crate::errors::RepoError::SerializationFailure) => {
+                tracing::warn!("Database serialization failure (concurrent modification detected)");
+                Self {
+                    status: StatusCode::CONFLICT,
+                    code: "CONCURRENT_MODIFICATION",
+                    message: "Resource was modified by another request".into(),
+                }
+            }
+            AppError::Repo(crate::errors::RepoError::Transaction(ref err)) => {
+                tracing::error!(error = ?err, "Database transaction failed");
+                Self {
+                    status: StatusCode::INTERNAL_SERVER_ERROR,
+                    code: "TRANSACTION_ERROR",
+                    message: "Database transaction failed".into(),
+                }
+            }
+            AppError::Repo(crate::errors::RepoError::ConnectionPool(ref err)) => {
+                tracing::error!(error = ?err, "Database connection pool exhausted or unavailable");
+                Self {
+                    status: StatusCode::SERVICE_UNAVAILABLE,
+                    code: "DATABASE_UNAVAILABLE",
+                    message: "Database connection failed".into(),
+                }
+            }
+            AppError::Repo(crate::errors::RepoError::Database {
+                ref source,
+                operation,
+            }) => {
+                tracing::error!(
+                    error = ?source,
+                    operation = operation,
+                    "Database operation failed"
+                );
+                Self {
+                    status: StatusCode::INTERNAL_SERVER_ERROR,
+                    code: "DATABASE_ERROR",
+                    message: "Database operation failed".into(),
+                }
+            }
 
             // Service errors
             AppError::Service(crate::errors::ServiceError::Unauthenticated) => Self {
@@ -131,7 +150,12 @@ impl From<AppError> for ApiError {
                 code: "INVALID_STATE_TRANSITION",
                 message: msg,
             },
-            AppError::Service(crate::errors::ServiceError::ExternalService { service, .. }) => {
+            AppError::Service(crate::errors::ServiceError::ExternalService { service, source }) => {
+                tracing::error!(
+                    service = service,
+                    error = ?source,
+                    "External service call failed"
+                );
                 Self {
                     status: StatusCode::BAD_GATEWAY,
                     code: "EXTERNAL_SERVICE_ERROR",
@@ -145,11 +169,14 @@ impl From<AppError> for ApiError {
             },
 
             // Catch-all for unexpected errors
-            AppError::Unexpected(_) => Self {
-                status: StatusCode::INTERNAL_SERVER_ERROR,
-                code: "INTERNAL_ERROR",
-                message: "An unexpected error occurred".into(),
-            },
+            AppError::Unexpected(ref err) => {
+                tracing::error!(error = ?err, "Unexpected error occurred");
+                Self {
+                    status: StatusCode::INTERNAL_SERVER_ERROR,
+                    code: "INTERNAL_ERROR",
+                    message: "An unexpected error occurred".into(),
+                }
+            }
         }
     }
 }
@@ -201,6 +228,22 @@ impl ApiError {
             status: StatusCode::SERVICE_UNAVAILABLE,
             code: "DATABASE_UNAVAILABLE",
             message: "Database connection failed".into(),
+        }
+    }
+
+    pub fn service_unavailable(message: String) -> Self {
+        Self {
+            status: StatusCode::SERVICE_UNAVAILABLE,
+            code: "SERVICE_UNAVAILABLE",
+            message,
+        }
+    }
+
+    pub fn internal(message: String) -> Self {
+        Self {
+            status: StatusCode::INTERNAL_SERVER_ERROR,
+            code: "INTERNAL_ERROR",
+            message,
         }
     }
 }

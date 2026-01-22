@@ -71,6 +71,27 @@ pub async fn run() -> anyhow::Result<()> {
         as Arc<dyn crate::ports::order_repo::OrderRepo>;
     tracing::debug!("initialized repository: Order");
 
+    // Initialize order queue worker
+    const ORDER_QUEUE_CAPACITY: usize = 100;
+    let order_queue_tx = crate::app::order_queue::spawn_order_queue_worker(
+        pool.clone(),
+        flash_sale_repo.clone(),
+        order_repo.clone(),
+        ORDER_QUEUE_CAPACITY,
+    );
+    tracing::info!(
+        "Order queue worker spawned with capacity {}",
+        ORDER_QUEUE_CAPACITY
+    );
+
+    // Initialize rate limiter (10 requests per second per user)
+    const RATE_LIMIT_PER_USER: u32 = 10;
+    let rate_limiter = crate::adapters::http::middleware::UserRateLimiter::new(RATE_LIMIT_PER_USER);
+    tracing::info!(
+        "Rate limiter initialized: {} req/s per user",
+        RATE_LIMIT_PER_USER
+    );
+
     let state = AppState {
         user_repo,
         product_repo,
@@ -78,6 +99,8 @@ pub async fn run() -> anyhow::Result<()> {
         order_repo,
         db_pool: pool,
         prometheus_handle,
+        order_queue_tx,
+        rate_limiter,
     };
     let app = http_router(state);
     tracing::debug!("HTTP router configured");

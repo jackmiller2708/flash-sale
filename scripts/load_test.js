@@ -2,8 +2,8 @@ import http from "k6/http";
 import { check, sleep } from "k6";
 
 export const options = {
-  vus: 10, // Virtual Users
-  duration: "30s",
+  vus: __ENV.VUS || 150, // Virtual Users - exceeds queue capacity of 100
+  duration: __ENV.DURATION || "30s",
 };
 
 const BASE_URL = __ENV.BASE_URL || "http://localhost:3000";
@@ -48,8 +48,13 @@ export default function (data) {
   const res = http.post(url, payload, params);
 
   check(res, {
-    "is status 201 or 409 or 404": (r) => [201, 409, 404].includes(r.status),
+    "is valid response": (r) => [201, 409, 404, 429, 503].includes(r.status),
+    "201 = created": (r) => r.status === 201,
+    "409 = sold out": (r) => r.status === 409,
+    "404 = not found": (r) => r.status === 404,
+    "429 = rate limited": (r) => r.status === 429,
+    "503 = queue overflow": (r) => r.status === 503,
   });
 
-  sleep(0.1); // Small sleep to control request rate
+  // No sleep - maximize pressure to test admission control
 }

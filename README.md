@@ -21,7 +21,8 @@ I'm building this project through several iterative phases:
 - **Phase 0: Foundations** ✅ - Basic HTTP server and DB integration | [Devlog](docs/devlogs/00_foundations.md)
 - **Phase 1: Naive FlashDeal** ✅ - Transactional order flow with pessimistic locking | [Devlog](docs/devlogs/01_naive_flash_deal.md)
 - **Phase 2: Observability First** ✅ - Measuring performance and identifying bottlenecks | [Devlog](docs/devlogs/02_observability_first.md)
-- **Phase 3+: Scaling** 🚧 - Admission control, async processing, and sharded inventory
+- **Phase 3: Admission Control** ✅ - Request queuing and rate limiting | [Devlog](docs/devlogs/03_admission_control.md)
+- **Phase 4+: Scaling** 🚧 - Async processing, idempotency, and sharded inventory
 
 ## Getting Started
 ### Dependencies
