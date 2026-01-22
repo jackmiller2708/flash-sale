@@ -18,10 +18,10 @@ The project follows a hexagonal architecture (Ports & Adapters) to decouple core
 
 ## Roadmap Overview
 I'm building this project through several iterative phases:
-- **Phase 0: Foundations** ✅ - Basic HTTP server and DB integration.
-- **Phase 1: Naive FlashDeal** ✅ - Transactional order flow with pessimistic locking.
-- **Phase 2: Observability** ✅ - Measuring performance and identifying bottlenecks.
-- **Phase 3+: Scaling** 🚧 - Admission control, async processing, and sharded inventory.
+- **Phase 0: Foundations** ✅ - Basic HTTP server and DB integration | [Devlog](docs/devlogs/00_foundations.md)
+- **Phase 1: Naive FlashDeal** ✅ - Transactional order flow with pessimistic locking | [Devlog](docs/devlogs/01_naive_flash_deal.md)
+- **Phase 2: Observability First** ✅ - Measuring performance and identifying bottlenecks | [Devlog](docs/devlogs/02_observability_first.md)
+- **Phase 3+: Scaling** 🚧 - Admission control, async processing, and sharded inventory
 
 ## Getting Started
 ### Dependencies
@@ -60,5 +60,13 @@ Once the `observability` profile is running:
 
 You can use these to calculate p95/p99 latencies and monitor system throughput.
 
-## Learning Logs
-Detailed lessons learned and architectural decisions are recorded in the [Devlogs](docs/devlogs/).
+## Development Journal
+
+I'm documenting my journey building this system in the [Devlogs](docs/devlogs/). Each devlog corresponds to a phase of development and includes:
+
+- **Technical decisions and trade-offs**: Why I chose pessimistic locking, how I structured repositories, etc.
+- **Challenges and solutions**: Real problems I ran into (Docker networking, foreign key violations, module visibility)
+- **Performance insights**: Load testing results, metrics analysis, and bottleneck identification
+- **Lessons learned**: What worked, what didn't, and what I'd do differently
+
+The devlogs are written in a conversational style—think of them as notes I'm sharing with a colleague, not formal documentation. Each devlog references its corresponding [phase checklist](docs/phases/) for detailed implementation steps. If you're learning Rust, building high-concurrency systems, or just curious about the thought process behind technical decisions, they might be useful.
