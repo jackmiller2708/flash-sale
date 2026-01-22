@@ -1,0 +1,79 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO orders (id, user_id, flash_sale_id, quantity, status, created_at)\n            VALUES ($1, $2, $3, $4, $5, $6)\n            RETURNING id, user_id, flash_sale_id, quantity, status as \"status: OrderStatus\", created_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "flash_sale_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "quantity",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "status: OrderStatus",
+        "type_info": {
+          "Custom": {
+            "name": "order_status",
+            "kind": {
+              "Enum": [
+                "PENDING",
+                "CONFIRMED",
+                "FAILED"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Int4",
+        {
+          "Custom": {
+            "name": "order_status",
+            "kind": {
+              "Enum": [
+                "PENDING",
+                "CONFIRMED",
+                "FAILED"
+              ]
+            }
+          }
+        },
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "bf1241c05fb6235c5294db4adbc4e005ec0dbdfe5835b3858c92c4ba1468b5d2"
+}
