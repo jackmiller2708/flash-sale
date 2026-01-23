@@ -1,4 +1,4 @@
-use axum::{Json, extract::State};
+use axum::{Json, extract::State, http::StatusCode};
 use tokio::sync::oneshot;
 
 use crate::{
@@ -11,7 +11,7 @@ use crate::{
 pub async fn create_order(
     State(state): State<AppState>,
     Json(payload): Json<CreateOrderRequest>,
-) -> Result<Json<OrderResponse>, ApiError> {
+) -> Result<(StatusCode, Json<OrderResponse>), ApiError> {
     let command = order_logic::CreateOrderCommand::from(payload);
 
     // Check rate limit for this user
@@ -45,5 +45,5 @@ pub async fn create_order(
         .map_err(|_| ApiError::internal("Failed to receive order processing result".to_string()))?
         .map_err(ApiError::from)?;
 
-    Ok(Json(order.into()))
+    Ok((StatusCode::CREATED, Json(order.into())))
 }

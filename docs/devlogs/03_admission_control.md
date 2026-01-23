@@ -290,30 +290,31 @@ I ran a load test with **150 Virtual Users** for 30 seconds to stress the admiss
 
 | Metric             | Result     |
 | :----------------- | :--------- |
-| **Total Requests** | 5,384      |
-| **Throughput**     | ~176 req/s |
-| **Avg Latency**    | 840.43ms   |
-| **Median Latency** | 714.24ms   |
-| **P95 Latency**    | 1.85s      |
-| **Max Latency**    | 2.8s       |
+| **Total Requests** | 4,997      |
+| **Throughput**     | ~163 req/s |
+| **Avg Latency**    | 906.28ms   |
+| **Median Latency** | 863.82ms   |
+| **P95 Latency**    | 1.2s       |
+| **Max Latency**    | 1.35s      |
 
 ### Admission Control Observations
 
-| Status Code            | Count | Result                                                |
-| :--------------------- | :---- | :---------------------------------------------------- |
-| **201 Created**        | 0     | Flash sale was already sold out or inventory was tiny |
-| **409 Sold Out**       | 5,333 | Successful contention handling (inventory protected)  |
-| **429 Rate Limited**   | 0     | Users didn't exceed 10 req/s individually             |
-| **503 Queue Overflow** | 0     | Queue (100) kept up with 150 VUs (~176 req/s)         |
+| Status Code            | Count | Percentage | Result                                                  |
+| :--------------------- | :---- | :--------- | :------------------------------------------------------ |
+| **201 Created**        | 50    | 1%         | Successfully created orders before inventory exhaustion |
+| **409 Sold Out**       | 4,946 | 98.97%     | Successful contention handling (inventory protected)    |
+| **429 Rate Limited**   | 0     | 0%         | Users didn't exceed 10 req/s individually               |
+| **503 Queue Overflow** | 0     | 0%         | Queue (100) kept up with 150 VUs (~163 req/s)           |
 
 ### Analysis: Stability vs. Latency
 
 The results confirm the expected behavior of Phase 3:
 
 1. **System Stability**: The database remained stable throughout the test. Even under "high" pressure (150 VUs), the server processed requests successfully without crashing or losing connections.
-2. **Latency Smoothing**: Compared to Phase 2 (~300ms P95), the latency increased significantly (1.85s P95). This is the **queuing delay** in action. Requests are waiting in memory for their turn to access the database, preventing a connection pool spike.
-3. **Queue Throughput**: Interestingly, 150 VUs at ~840ms latency produced ~176 req/s. Since the database was able to process these requests fast enough, the queue depth (100) was never exceeded. This means the system is currently "oversized" for this specific load, and we'd need even higher concurrency to see 503 errors.
-4. **Resilience**: Every single request received a valid response (mostly 409s). Zero timeouts or internal server errors were recorded.
+2. **Latency Smoothing**: Compared to Phase 2 (~300ms P95), the latency increased to 1.2s P95. This is the **queuing delay** in action. Requests are waiting in memory for their turn to access the database, preventing a connection pool spike.
+3. **Queue Throughput**: 150 VUs at ~906ms latency produced ~163 req/s. Since the database was able to process these requests fast enough, the queue depth (100) was never exceeded. This means the system is currently "oversized" for this specific load, and we'd need even higher concurrency to see 503 errors.
+4. **Resilience**: Every single request received a valid response (1% 201s, 99% 409s). Zero timeouts or internal server errors were recorded.
+5. **Inventory Protection**: Only 50 orders succeeded before the flash sale sold out, demonstrating that the pessimistic locking correctly prevents overselling.
 
 ---
 
