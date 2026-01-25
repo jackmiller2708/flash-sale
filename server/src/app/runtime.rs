@@ -15,7 +15,7 @@ use crate::{
 
 pub async fn run() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::new("debug").add_directive("sqlx::query=info".parse().unwrap()))
+        .with_env_filter(EnvFilter::new("info").add_directive("sqlx::query=info".parse().unwrap()))
         .with_target(false)
         .with_thread_ids(false)
         .with_file(false)
@@ -73,10 +73,15 @@ pub async fn run() -> anyhow::Result<()> {
 
     // Initialize order queue worker
     const ORDER_QUEUE_CAPACITY: usize = 100;
+
+    // Create the order status store
+    let order_status_store = std::sync::Arc::new(dashmap::DashMap::new());
+
     let order_queue_tx = crate::app::order_queue::spawn_order_queue_worker(
         pool.clone(),
         flash_sale_repo.clone(),
         order_repo.clone(),
+        order_status_store.clone(),
         ORDER_QUEUE_CAPACITY,
     );
     tracing::info!(
@@ -92,7 +97,7 @@ pub async fn run() -> anyhow::Result<()> {
         RATE_LIMIT_PER_USER
     );
 
-    let state = AppState {
+    let app = http_router(AppState {
         user_repo,
         product_repo,
         flash_sale_repo,
@@ -101,8 +106,8 @@ pub async fn run() -> anyhow::Result<()> {
         prometheus_handle,
         order_queue_tx,
         rate_limiter,
-    };
-    let app = http_router(state);
+        order_status_store,
+    });
     tracing::debug!("HTTP router configured");
 
     let listener = tokio::net::TcpListener::bind(&config.http_addr).await?;

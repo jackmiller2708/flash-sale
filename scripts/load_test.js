@@ -1,19 +1,20 @@
 import http from "k6/http";
-import { check, sleep } from "k6";
+import { check, sleep, fail } from "k6";
 
 export const options = {
-  vus: __ENV.VUS || 150, // Virtual Users - exceeds queue capacity of 100
+  vus: __ENV.VUS || 150,
   duration: __ENV.DURATION || "30s",
 };
 
 const BASE_URL = __ENV.BASE_URL || "http://localhost:3000";
-
-// Replace with a valid flash_sale_id from your database
 const FLASH_SALE_ID =
   __ENV.FLASH_SALE_ID || "11111111-1111-1111-1111-111111111111";
 
+// Polling config
+const MAX_POLL_ATTEMPTS = 10;
+const POLL_INTERVAL_SEC = 1;
+
 export function setup() {
-  // Fetch users to use in the test
   const res = http.get(`${BASE_URL}/users`);
   const users = res.json();
 
@@ -30,31 +31,55 @@ export default function (data) {
     return;
   }
 
-  const url = `${BASE_URL}/orders`;
-  const userId = data.userIds[Math.floor(Math.random() * data.userIds.length)];
-
-  const payload = JSON.stringify({
-    user_id: userId,
-    flash_sale_id: FLASH_SALE_ID,
-    quantity: 1,
-  });
-
-  const params = {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-
-  const res = http.post(url, payload, params);
+  const res = http.post(
+    `${BASE_URL}/orders`,
+    JSON.stringify({
+      user_id: data.userIds[Math.floor(Math.random() * data.userIds.length)],
+      flash_sale_id: FLASH_SALE_ID,
+      quantity: 1,
+    }),
+    { headers: { "Content-Type": "application/json" } },
+  );
 
   check(res, {
-    "is valid response": (r) => [201, 409, 404, 429, 503].includes(r.status),
-    "201 = created": (r) => r.status === 201,
+    "valid response": (r) => [202, 409, 404, 429, 503].includes(r.status),
+    "202 = accepted": (r) => r.status === 202,
     "409 = sold out": (r) => r.status === 409,
     "404 = not found": (r) => r.status === 404,
     "429 = rate limited": (r) => r.status === 429,
     "503 = queue overflow": (r) => r.status === 503,
   });
 
-  // No sleep - maximize pressure to test admission control
+  // Only poll if async order was accepted
+  if (res.status !== 202) {
+    sleep(0.1);
+    return;
+  }
+
+  const body = res.json();
+  const orderId = body.order_id;
+
+  // Poll order status
+  for (let attempt = 1; attempt <= MAX_POLL_ATTEMPTS; attempt++) {
+    sleep(POLL_INTERVAL_SEC);
+
+    const statusRes = http.get(`${BASE_URL}/orders/${orderId}/status`, {
+      tags: { endpoint: "order_status" },
+    });
+
+    const status = statusRes.json("status");
+
+    // Terminal state reached
+    if (status !== "pending") {
+      check(statusRes, {
+        "status request ok": (r) => r.status === 200,
+        "terminal status": () => ["completed", "failed"].includes(status),
+      });
+
+      return;
+    }
+  }
+
+  // If we reach here, polling timed out
+  fail("Order still pending after max polling attempts");
 }

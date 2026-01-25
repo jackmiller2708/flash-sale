@@ -24,3 +24,27 @@ impl From<Order> for OrderResponse {
         }
     }
 }
+
+/// Response when an order is accepted for async processing
+#[derive(Debug, Serialize)]
+pub struct OrderAcceptedResponse {
+    pub order_id: Uuid,
+    pub status: String,
+    pub status_url: String,
+}
+
+/// Response for order status polling
+#[derive(Debug, Serialize)]
+pub struct OrderStatusResponse {
+    pub order_id: Uuid,
+    pub status: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub result: Option<OrderResult>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(untagged)]
+pub enum OrderResult {
+    Success(OrderResponse),
+    Error { message: String },
+}

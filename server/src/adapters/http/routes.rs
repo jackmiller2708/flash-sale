@@ -16,4 +16,8 @@ pub fn routes() -> Router<AppState> {
         .route("/products", post(handlers::product_handler::create_product))
         .route("/products", get(handlers::product_handler::get_products))
         .route("/orders", post(handlers::order_handler::create_order))
+        .route(
+            "/orders/{order_id}/status",
+            get(handlers::order_handler::get_order_status),
+        )
 }

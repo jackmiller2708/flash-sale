@@ -1,10 +1,12 @@
 use metrics_exporter_prometheus::PrometheusHandle;
 use std::sync::Arc;
 use tokio::sync::mpsc;
+use uuid::Uuid;
 
 use crate::{
     adapters::http::middleware::UserRateLimiter,
     app::order_queue::OrderQueueMessage,
+    domain::order::OrderProcessingStatus,
     ports::{
         flash_sale_repo::FlashSaleRepo, order_repo::OrderRepo, product_repo::ProductRepo,
         user_repo::UserRepo,
@@ -21,6 +23,8 @@ pub struct AppState {
     pub prometheus_handle: PrometheusHandle,
     pub order_queue_tx: mpsc::Sender<OrderQueueMessage>,
     pub rate_limiter: UserRateLimiter,
+    /// In-memory store for tracking async order processing status
+    pub order_status_store: Arc<dashmap::DashMap<Uuid, OrderProcessingStatus>>,
 }
 
 impl AppState {

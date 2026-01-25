@@ -22,7 +22,8 @@ I'm building this project through several iterative phases:
 - **Phase 1: Naive FlashDeal** ✅ - Transactional order flow with pessimistic locking | [Devlog](docs/devlogs/01_naive_flash_deal.md)
 - **Phase 2: Observability First** ✅ - Measuring performance and identifying bottlenecks | [Devlog](docs/devlogs/02_observability_first.md)
 - **Phase 3: Admission Control** ✅ - Request queuing and rate limiting | [Devlog](docs/devlogs/03_admission_control.md)
-- **Phase 4+: Scaling** 🚧 - Async processing, idempotency, and sharded inventory
+- **Phase 4: Async Order Processing** ✅ - Decouple HTTP latency from DB writes (99.1% latency reduction!) | [Devlog](docs/devlogs/04_async_order_processing.md)
+- **Phase 5: Idempotency & Retries** 🚧 - Ensure one user, one order, and reliable recovery | [Phase Checklist](docs/phases/05_idempotency_retries.md)
 
 ## Getting Started
 ### Dependencies

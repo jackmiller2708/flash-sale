@@ -12,6 +12,17 @@ pub enum OrderStatus {
     Failed,
 }
 
+/// Tracks the processing status of an order in the async queue
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum OrderProcessingStatus {
+    /// Order is queued and waiting to be processed
+    Pending,
+    /// Order processing completed successfully
+    Completed(Order),
+    /// Order processing failed with an error message
+    Failed(String),
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Order {
     pub id: Uuid,
