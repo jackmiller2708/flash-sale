@@ -58,12 +58,6 @@ One thing I made sure to implement early was graceful shutdown. When you hit Ctr
 
 **Tooling matters.** SQLx's compile-time checks, `cargo-watch` for auto-reloading, and Docker Compose for environment management made development so much smoother. Investing time in good tooling early on pays dividends.
 
-## Phase 0 Complete
-
-The exit criteria for Phase 0 were simple: the system boots reliably, and requests reach the database. ✅ Done.
-
-More importantly, I had visibility into resource limits (connection pool stats) and a solid foundation to build on. The architecture was clean, the tooling was in place, and I understood the basics of async Rust and SQLx.
-
 ## What's Next
 
 The foundation is solid. Now comes the fun part: implementing the actual flash sale logic. Phase 1 is all about getting the core order flow working—even if it's naive and doesn't scale yet. I'll worry about performance later. First, I need to make it *correct*.

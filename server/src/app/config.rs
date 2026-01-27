@@ -5,6 +5,8 @@ use std::net::SocketAddr;
 pub struct Config {
     pub http_addr: SocketAddr,
     pub database_url: String,
+    pub log_dir: String,
+    pub log_level: String,
 }
 
 impl Config {
@@ -17,6 +19,8 @@ impl Config {
                 .parse()?,
             database_url: std::env::var("DATABASE_URL")
                 .context("DATABASE_URL must be set (e.g. in .env)")?,
+            log_dir: std::env::var("LOG_DIR").unwrap_or_else(|_| "./logs".to_string()),
+            log_level: std::env::var("LOG_LEVEL").unwrap_or_else(|_| "info".to_string()),
         })
     }
 }

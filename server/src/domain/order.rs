@@ -30,17 +30,19 @@ pub struct Order {
     pub flash_sale_id: Uuid,
     pub quantity: i32,
     pub status: OrderStatus,
+    pub idempotency_key: String,
     pub created_at: DateTime<Utc>,
 }
 
 impl Order {
-    pub fn new(user_id: Uuid, flash_sale_id: Uuid, quantity: i32) -> Self {
+    pub fn new(user_id: Uuid, flash_sale_id: Uuid, quantity: i32, idempotency_key: String) -> Self {
         Self {
             id: Uuid::new_v4(),
             user_id,
             flash_sale_id,
             quantity,
             status: OrderStatus::Pending,
+            idempotency_key,
             created_at: Utc::now(),
         }
     }
@@ -54,6 +56,7 @@ impl From<OrderRecord> for Order {
             flash_sale_id: value.flash_sale_id,
             quantity: value.quantity,
             status: value.status,
+            idempotency_key: value.idempotency_key,
             created_at: value.created_at,
         }
     }

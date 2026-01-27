@@ -306,14 +306,6 @@ flowchart TD
 
 For Phase 1, pessimistic locking is the right choice—it's simple and correct. But the diagram shows why it won't scale: that red "WAIT for lock" step serializes all requests.
 
-## Phase 1 Complete
-
-The exit criteria for Phase 1 were clear:
-1. ✅ **System never oversells inventory** - Pessimistic locking guarantees this
-2. ✅ **Throughput collapses under load** - This is expected and will be measured in Phase 2
-
-The system is correct. It's slow by design, but that's the point. I now have a baseline to optimize against.
-
 ## What's Next
 
 The system works. Orders are created, inventory is tracked, and nothing oversells. But I'm flying blind—I have no idea what the actual performance characteristics are.

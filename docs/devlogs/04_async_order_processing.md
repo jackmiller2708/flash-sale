@@ -152,13 +152,13 @@ When I first ran the new load tests, I saw a raw "ingestion" latency of **8ms**.
 
 However, a real user's experience isn't just the `POST` request; it's the `POST` plus the time spent polling. I updated my `k6` script to simulate a realistic client polling every 1 second.
 
-**Baseline (Phase 3 Sync)** vs **Final (Phase 4 Optimized + Release Mode)**:
+**Baseline (Phase 3 Sync)** vs **Final (Phase 4 Async)**:
 
-| Metric              | Phase 3 (Sync) | Phase 4 (Final Release) | Improvement |
-| :------------------ | :------------- | :---------------------- | :---------- |
-| **Median Duration** | 863ms          | **5.23ms**              | **99.4% ↓** |
-| **P95 Duration**    | 1.2s           | **25.11ms**             | **97.9% ↓** |
-| **Throughput**      | 163 req/s      | **352.2 req/s**         | **116% ↑**  |
+| Metric              | Phase 3 (Sync) | Phase 4 (Async) | Improvement |
+| :------------------ | :------------- | :-------------- | :---------- |
+| **Median Duration** | 863ms          | **5.23ms**      | **99.4% ↓** |
+| **P95 Duration**    | 1.2s           | **25.11ms**     | **97.9% ↓** |
+| **Throughput**      | 163 req/s      | **352.2 req/s** | **116% ↑**  |
 
 The median duration is now effectively the cost of a network round-trip. Even with 150 concurrent users and a serial worker, the ingestion path is so fast that the "waiting room" (the queue) never feels like a bottleneck to the HTTP response.
 
@@ -232,18 +232,6 @@ permit.send(msg);
 ```
 
 This "fail-fast" path is now practically free, allowing the server to reject thousands of requests per second without breaking a sweat.
-
----
-
-## Phase 4 Complete: The Concurrency Grand Slam
-
-The exit criteria for Phase 4 were ambitious, and the final results exceeded them:
-1. ✅ **99.4% reduction in ingestion latency** - 5.23ms median achieved.
-2. ✅ **116% increase in throughput** - 352 req/s handled on a single core system.
-3. ✅ **High-concurrency state management** - `DashMap` eliminated all global lock contention.
-4. ✅ **Zero-Churn 503s** - `try_reserve` ensures we don't waste work on rejected requests.
-
-Phase 4 transformed a slow, synchronous API into a high-performance ingestion engine. We've mastered the art of "Deferred Processing" and sharded state management.
 
 ## What's Next
 

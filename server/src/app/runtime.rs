@@ -1,4 +1,3 @@
-use metrics_exporter_prometheus::PrometheusBuilder;
 use std::sync::Arc;
 use tracing_subscriber::EnvFilter;
 
@@ -14,17 +13,38 @@ use crate::{
 };
 
 pub async fn run() -> anyhow::Result<()> {
+    // Load configuration first to get log settings
+    let config = Config::from_env()?;
+
+    // Create logs directory if it doesn't exist
+    std::fs::create_dir_all(&config.log_dir)?;
+
+    // Set up file appender with daily rotation
+    let file_appender = tracing_appender::rolling::daily(&config.log_dir, "flash-sale.log");
+    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+
+    // Initialize tracing subscriber with file output
     tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::new("info").add_directive("sqlx::query=info".parse().unwrap()))
+        .with_env_filter(
+            EnvFilter::new(&config.log_level).add_directive("sqlx::query=info".parse().unwrap()),
+        )
         .with_target(false)
         .with_thread_ids(false)
         .with_file(false)
         .with_line_number(false)
-        .json() // Enable JSON formatting
+        .json() // Maintain JSON formatting for structured logs
+        .with_writer(non_blocking)
         .init();
 
+    tracing::info!(
+        "Logging initialized: dir={}, level={}",
+        config.log_dir,
+        config.log_level
+    );
+    tracing::debug!("Configuration loaded: {:?}", config);
+
     // Initialize Prometheus metrics with Histogram buckets
-    let prometheus_handle = PrometheusBuilder::new()
+    let prometheus_handle = metrics_exporter_prometheus::PrometheusBuilder::new()
         .set_buckets(&[
             0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0,
         ])
@@ -32,9 +52,6 @@ pub async fn run() -> anyhow::Result<()> {
         .install_recorder()
         .expect("failed to install Prometheus recorder");
     tracing::info!("Prometheus metrics initialized");
-
-    let config = Config::from_env()?;
-    tracing::debug!("Configuration loaded: {:?}", config);
 
     let pool = create_pool(&config).await?;
 

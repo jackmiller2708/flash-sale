@@ -1,5 +1,6 @@
 import http from "k6/http";
 import { check, sleep, fail } from "k6";
+import { randomItem } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
 
 export const options = {
   vus: __ENV.VUS || 150,
@@ -14,16 +15,26 @@ const FLASH_SALE_ID =
 const MAX_POLL_ATTEMPTS = 10;
 const POLL_INTERVAL_SEC = 1;
 
+// Idempotency retry simulation
+const RETRY_RATE = 0.2; // 20% of requests will reuse an idempotency key
+const RETRY_POOL_SIZE = 50; // Pool of idempotency keys to reuse for simulating retries
+
 export function setup() {
   const res = http.get(`${BASE_URL}/users`);
   const users = res.json();
 
   if (!users || users.length === 0) {
     console.error("No users found! Please create some users first.");
-    return { userIds: [] };
+    return { userIds: [], retryPool: [] };
   }
 
-  return { userIds: users.map((u) => u.id) };
+  // Pre-populate retry pool with random UUIDs
+  const retryPool = [];
+  for (let i = 0; i < RETRY_POOL_SIZE; i++) {
+    retryPool.push(crypto.randomUUID());
+  }
+
+  return { userIds: users.map((u) => u.id), retryPool };
 }
 
 export default function (data) {
@@ -31,15 +42,26 @@ export default function (data) {
     return;
   }
 
-  const res = http.post(
-    `${BASE_URL}/orders`,
-    JSON.stringify({
-      user_id: data.userIds[Math.floor(Math.random() * data.userIds.length)],
-      flash_sale_id: FLASH_SALE_ID,
-      quantity: 1,
-    }),
-    { headers: { "Content-Type": "application/json" } },
-  );
+  const url = `${BASE_URL}/orders`;
+  const payload = {
+    user_id: data.userIds[Math.floor(Math.random() * data.userIds.length)],
+    flash_sale_id: FLASH_SALE_ID,
+    quantity: 1,
+  };
+
+  // Generate or reuse idempotency key (simulate retries)
+  const shouldRetry = Math.random() < RETRY_RATE;
+  const idempotencyKey =
+    shouldRetry && data.retryPool.length > 0
+      ? data.retryPool[Math.floor(Math.random() * data.retryPool.length)]
+      : crypto.randomUUID();
+
+  const headers = {
+    "Content-Type": "application/json",
+    "Idempotency-Key": idempotencyKey,
+  };
+
+  const res = http.post(url, JSON.stringify(payload), { headers });
 
   check(res, {
     "valid response": (r) => [202, 409, 404, 429, 503].includes(r.status),

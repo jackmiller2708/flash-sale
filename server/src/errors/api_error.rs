@@ -246,4 +246,12 @@ impl ApiError {
             message,
         }
     }
+
+    pub fn bad_request(message: String) -> Self {
+        Self {
+            status: StatusCode::BAD_REQUEST,
+            code: "BAD_REQUEST",
+            message,
+        }
+    }
 }
